@@ -252,10 +252,9 @@ most valuable five minutes of the session.
 user-management-app/
 ├── package.json
 ├── server.js                       # starts the app and connects the routes
-├── data/
-│   └── user.json                   # our "database": starts as []
 ├── models/
-│   └── userModel.js                # M — the only file that touches the file
+│   ├── user.json                   # our "database": starts as []
+│   └── userModel.js                # M — the only file that touches user.json
 ├── controllers/
 │   └── userController.js           # C — the five CRUD functions
 ├── routes/

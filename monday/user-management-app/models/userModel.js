@@ -1,9 +1,11 @@
 // MODEL - the only file that reads and writes user.json
 
 const fs = require('fs');
-const path = require('path');
 
-const FILE = path.join(__dirname, '..', 'data', 'user.json');
+// user.json sits right next to this file inside the models folder.
+// __dirname is the path of THIS folder, so the file is found no matter
+// which folder you run "npm start" from.
+const FILE = __dirname + '/user.json';
 
 // read the whole file and give back the array
 function readUsers() {

@@ -17,8 +17,9 @@ Server starts on http://localhost:3000
 ```
 user-management-app/
 ├── server.js                       # starts the app, connects the routes
-├── data/user.json                  # our "database" (starts as [])
-├── models/userModel.js             # M - reads/writes the file
+├── models/
+│   ├── user.json                   # our "database" (starts as [])
+│   └── userModel.js                # M - reads/writes user.json
 ├── controllers/userController.js   # C - the 5 CRUD functions
 ├── routes/
 │   ├── userRoutes.js               # open routes
@@ -29,6 +30,7 @@ user-management-app/
 Who does what:
 
 - **Model** - only file that touches `user.json`. Never sees `req` or `res`.
+  The JSON file lives next to it in `models/`.
 - **Controller** - reads `req`, calls the model, sends `res`.
 - **Routes** - just a list of URLs pointing to controller functions.
 - **Middleware** - runs before the controller, can block the request.
