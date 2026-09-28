@@ -30,8 +30,7 @@ blog-app/
     ├── layout.pug                  # shared page frame (header + styles)
     ├── index.pug                   # home page, lists all posts
     ├── post.pug                    # one post
-    ├── new.pug                     # the write-a-post form
-    └── 404.pug                     # post not found
+    └── new.pug                     # the write-a-post form
 ```
 
 Compare this with Monday's user app: **everything is the same except the

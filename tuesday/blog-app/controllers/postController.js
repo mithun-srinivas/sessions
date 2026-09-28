@@ -1,52 +1,41 @@
-// CONTROLLER - gets the data from the model and renders a Pug view
+// CONTROLLER - gets the data, then renders a Pug view
 //
-// On Monday our controllers ended with res.json(...).
-// Today they end with res.render(...) instead - same job, different View.
+// On Monday these functions ended with res.json(...).
+// Today they end with res.render(...). That is the only real change.
 
 const { readPosts, savePosts } = require('../models/postModel');
 
-// HOME - show all posts
+// HOME - all posts
 function showAllPosts(req, res) {
   const posts = readPosts();
 
-  // res.render(viewName, dataForTheView)
-  // looks for views/index.pug and hands it { title, posts }
-  res.render('index', {
-    title: 'My Blog',
-    posts: posts,
-  });
+  // render views/index.pug and give it this data
+  res.render('index', { title: 'My Blog', posts: posts });
 }
 
-// SHOW ONE POST
+// ONE POST
 function showOnePost(req, res) {
   const posts = readPosts();
   const post = posts.find((p) => p.id == req.params.id);
 
   if (!post) {
-    return res.status(404).render('404', { title: 'Not found' });
+    return res.status(404).send('Post not found');
   }
 
-  res.render('post', {
-    title: post.title,
-    post: post,
-  });
+  res.render('post', { title: post.title, post: post });
 }
 
-// SHOW THE "WRITE A POST" FORM
+// THE FORM
 function showNewForm(req, res) {
   res.render('new', { title: 'New post' });
 }
 
-// CREATE A POST (the form sends us here)
+// CREATE - the form sends us here
 function createPost(req, res) {
   const { title, body } = req.body;
 
-  // if something is missing, show the form again with a message
   if (!title || !body) {
-    return res.render('new', {
-      title: 'New post',
-      error: 'Please fill in both the title and the body.',
-    });
+    return res.status(400).send('Please fill in both fields');
   }
 
   const posts = readPosts();
@@ -56,30 +45,21 @@ function createPost(req, res) {
     newId = posts[posts.length - 1].id + 1;
   }
 
-  posts.push({
-    id: newId,
-    title: title,
-    body: body,
-    date: new Date().toDateString(),
-  });
-
+  posts.push({ id: newId, title: title, body: body });
   savePosts(posts);
 
-  // redirect after a form post, so refreshing the page
-  // does not create the same post twice
+  // redirect so that refreshing does not post it twice
   res.redirect('/');
 }
 
-// DELETE A POST
+// DELETE
 function deletePost(req, res) {
   const posts = readPosts();
-  const index = posts.findIndex((p) => p.id == req.params.id);
 
-  if (index !== -1) {
-    posts.splice(index, 1);
-    savePosts(posts);
-  }
+  // keep everything except the one we are deleting
+  const remaining = posts.filter((p) => p.id != req.params.id);
 
+  savePosts(remaining);
   res.redirect('/');
 }
 

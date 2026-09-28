@@ -206,8 +206,8 @@ these are called **locals**.
 
 ```pug
 h2= post.title                       //- = means "run this as JavaScript"
-p Posted on #{post.date}             //- #{} interpolates inside text
-p!= post.htmlContent                 //- != prints WITHOUT escaping (careful!)
+p There are #{posts.length} posts    //- #{} interpolates inside text
+p!= post.body                        //- != prints WITHOUT escaping (careful!)
 ```
 
 | Syntax | Use it when |
@@ -320,12 +320,11 @@ html
   head
     title= title
   body
-    header
-      h1
-        a(href="/") My Blog
-      a(href="/new") Write a post
-    main
-      block content
+    h1
+      a(href="/") My Blog
+    a(href="/new") Write a post
+    hr
+    block content
 ```
 
 **`views/index.pug`** — fills the hole:
@@ -336,6 +335,8 @@ extends layout
 block content
   each post in posts
     h2= post.title
+  else
+    p No posts yet.
 ```
 
 `block content` in the layout is the slot. `block content` in the child is what
@@ -365,9 +366,8 @@ Difference worth stating clearly:
 
 ```pug
 mixin postCard(post)
-  article
-    h2= post.title
-    p.date= post.date
+  h2= post.title
+  p= post.body
 
 //- use it
 each post in posts
@@ -483,8 +483,7 @@ blog-app/
     ├── layout.pug                  # the shared page frame
     ├── index.pug                   # home page, lists all posts
     ├── post.pug                    # one post
-    ├── new.pug                     # the write-a-post form
-    └── 404.pug                     # post not found
+    └── new.pug                     # the write-a-post form
 ```
 
 Compare this with Monday's folder listing. **Everything is the same except the
@@ -531,7 +530,7 @@ Roughly 60 minutes.
 | 3 | Pass `title` from the controller, print it with `=` | 7 | Locals; the `=` trap |
 | 4 | Read `posts.json` in the model, loop with `each` | 10 | The model is unchanged from Monday |
 | 5 | Pull the frame out into `layout.pug` with `extends` | 10 | Write the header once |
-| 6 | Add `/post/:id` and the 404 view | 8 | Same `req.params` as Monday |
+| 6 | Add `/post/:id` | 8 | Same `req.params` as Monday |
 | 7 | Add the form and `POST /new` | 10 | `urlencoded`, `name`, redirect |
 | 8 | XSS demo: post a `<script>` title | 2 | Pug escapes for free |
 
@@ -603,7 +602,7 @@ a(href="/new") Write a post
 
 //- printing data
 h2= post.title
-p Posted on #{post.date}
+p There are #{posts.length} posts
 
 //- conditionals
 if posts.length === 0

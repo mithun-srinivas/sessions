@@ -1,38 +1,21 @@
-//- layout.pug - the page frame every other view reuses.
-//- Lines starting with //- are Pug comments (they never reach the browser).
+//- layout.pug - the page frame that every other view reuses.
+//- Lines starting with //- are Pug comments.
 
 doctype html
 html
   head
     title= title
     style.
-      body { font-family: system-ui, sans-serif; max-width: 640px;
-             margin: 40px auto; padding: 0 16px; line-height: 1.6; color: #222; }
-      header { display: flex; justify-content: space-between;
-               align-items: center; border-bottom: 2px solid #eee;
-               padding-bottom: 12px; margin-bottom: 24px; }
-      h1 { font-size: 24px; margin: 0; }
-      a { color: #0a58ca; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-      article { border-bottom: 1px solid #eee; padding-bottom: 16px;
-                margin-bottom: 16px; }
-      .date { color: #777; font-size: 13px; margin: 4px 0 8px; }
-      .empty { color: #777; }
-      .error { color: #b02a37; }
-      label { display: block; margin-top: 12px; font-weight: 600; }
-      input, textarea { width: 100%; padding: 8px; font-size: 15px;
-                        font-family: inherit; border: 1px solid #ccc;
-                        border-radius: 4px; }
-      button { margin-top: 16px; padding: 8px 16px; font-size: 15px;
-               cursor: pointer; border: 1px solid #ccc; border-radius: 4px;
-               background: #f6f6f6; }
+      body { font-family: sans-serif; max-width: 600px; margin: 40px auto;
+             line-height: 1.6; }
+      a { text-decoration: none; }
+      input, textarea { width: 100%; padding: 6px; }
 
   body
-    header
-      h1
-        a(href="/") My Blog
-      a(href="/new") Write a post
+    h1
+      a(href="/") My Blog
+    a(href="/new") Write a post
+    hr
 
-    main
-      //- each page drops its own content into this block
-      block content
+    //- each page puts its own content here
+    block content
