@@ -1,0 +1,17 @@
+//- post.pug - one single post
+
+extends layout
+
+block content
+  article
+    h2= post.title
+    p.date= post.date
+    p= post.body
+
+  //- browsers can only send GET and POST from a form,
+  //- so deleting uses POST rather than DELETE
+  form(action="/post/" + post.id + "/delete", method="POST")
+    button(type="submit") Delete this post
+
+  p
+    a(href="/") Back to all posts

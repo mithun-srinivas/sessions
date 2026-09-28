@@ -1,0 +1,19 @@
+//- new.pug - the form for writing a post
+
+extends layout
+
+block content
+  h2 Write a new post
+
+  if error
+    p.error= error
+
+  form(action="/new", method="POST")
+    label(for="title") Title
+    //- the name attribute becomes the key in req.body
+    input#title(type="text", name="title")
+
+    label(for="body") Body
+    textarea#body(name="body", rows="8")
+
+    button(type="submit") Publish

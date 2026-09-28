@@ -1,0 +1,14 @@
+//- index.pug - the home page: a list of every post
+
+extends layout
+
+block content
+  if posts.length === 0
+    p.empty No posts yet. Write the first one!
+
+  each post in posts
+    article
+      h2
+        a(href="/post/" + post.id)= post.title
+      p.date= post.date
+      p= post.body
