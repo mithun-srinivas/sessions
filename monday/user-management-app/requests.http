@@ -1,0 +1,121 @@
+###############################################################################
+# requests.http — classroom demo script
+#
+# Open this in VS Code with the "REST Client" extension and click "Send Request"
+# above each block. Run them top to bottom during the session; keep
+# src/data/user.json open in a split pane so students watch it change.
+###############################################################################
+
+@baseUrl = http://localhost:3000
+
+### 0. API index — see every endpoint at a glance
+GET {{baseUrl}}/
+
+###############################################################################
+# PART A — OPEN ROUTES (no middleware). Plain REST CRUD.
+###############################################################################
+
+### A1. CREATE a user -> expect 201
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{ "name": "Asha Rao", "email": "asha@example.com", "age": 24 }
+
+### A2. CREATE another -> expect 201
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{ "name": "Ravi Kumar", "email": "ravi@example.com", "age": 31 }
+
+### A3. CREATE with a duplicate email -> expect 409 Conflict
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{ "name": "Impostor", "email": "asha@example.com" }
+
+### A4. CREATE with bad input -> expect 400 with a list of errors
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{ "name": "A", "email": "not-an-email" }
+
+### A5. READ all users -> expect 200
+GET {{baseUrl}}/api/users
+
+### A6. READ one user -> expect 200
+GET {{baseUrl}}/api/users/1
+
+### A7. READ a user that doesn't exist -> expect 404
+GET {{baseUrl}}/api/users/999
+
+### A8. UPDATE a user -> expect 200, note updatedAt changes
+PUT {{baseUrl}}/api/users/1
+Content-Type: application/json
+
+{ "age": 25 }
+
+### A9. DELETE a user -> expect 200
+DELETE {{baseUrl}}/api/users/2
+
+### A10. DELETE the same user again -> expect 404.
+###      Server state is identical after both calls: DELETE is idempotent.
+DELETE {{baseUrl}}/api/users/2
+
+###############################################################################
+# PART B — PROTECTED ROUTES (with the isLoggedIn middleware).
+# Same controllers as Part A. Only the middleware differs.
+###############################################################################
+
+### B1. Check the session -> isLoggedIn should be false
+GET {{baseUrl}}/api/auth/status
+
+### B2. Try a protected route while logged OUT -> expect 401.
+###     The controller never runs; the middleware stopped the chain.
+GET {{baseUrl}}/api/secure/users
+
+### B3. LOG IN -> flips isLoggedIn to true
+POST {{baseUrl}}/api/auth/login
+
+### B4. Same request as B2, now logged in -> expect 200.
+###     Nothing about the controller changed. Only the guard passed.
+GET {{baseUrl}}/api/secure/users
+
+### B5. CREATE through the protected route -> expect 201
+POST {{baseUrl}}/api/secure/users
+Content-Type: application/json
+
+{ "name": "Meera Nair", "email": "meera@example.com", "age": 29 }
+
+### B6. READ one through the protected route -> expect 200
+GET {{baseUrl}}/api/secure/users/1
+
+### B7. UPDATE through the protected route -> expect 200
+PUT {{baseUrl}}/api/secure/users/1
+Content-Type: application/json
+
+{ "name": "Asha R. Rao", "age": 26 }
+
+### B8. DELETE through the protected route -> expect 200
+DELETE {{baseUrl}}/api/secure/users/1
+
+### B9. LOG OUT
+POST {{baseUrl}}/api/auth/logout
+
+### B10. Every protected route is now 401 again -> the payoff moment
+POST {{baseUrl}}/api/secure/users
+Content-Type: application/json
+
+{ "name": "Nobody", "email": "nobody@example.com" }
+
+###############################################################################
+# PART C — error handling
+###############################################################################
+
+### C1. Unknown route -> expect 404 from the notFound middleware
+GET {{baseUrl}}/api/does-not-exist
+
+### C2. Malformed JSON -> expect 400 from the central error handler
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{ "name": "broken",

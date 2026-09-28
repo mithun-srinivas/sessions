@@ -1,0 +1,20 @@
+{
+  "name": "user-management-app",
+  "version": "1.0.0",
+  "description": "Express.js user management API built with a proper MVC structure",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "express",
+    "mvc",
+    "rest",
+    "crud"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
