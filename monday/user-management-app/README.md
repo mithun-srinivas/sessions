@@ -12,14 +12,17 @@ npm start
 
 Server starts on http://localhost:3000
 
+Run `npm start` from inside this folder. The model reads `./user.json`, which
+means "the folder you started the server from", so starting it from somewhere
+else will not find the file.
+
 ## Files
 
 ```
 user-management-app/
 ├── server.js                       # starts the app, connects the routes
-├── models/
-│   ├── user.json                   # our "database" (starts as [])
-│   └── userModel.js                # M - reads/writes user.json
+├── user.json                       # our "database" (starts as [])
+├── models/userModel.js             # M - reads/writes user.json
 ├── controllers/userController.js   # C - the 5 CRUD functions
 ├── routes/
 │   ├── userRoutes.js               # open routes
@@ -30,7 +33,6 @@ user-management-app/
 Who does what:
 
 - **Model** - only file that touches `user.json`. Never sees `req` or `res`.
-  The JSON file lives next to it in `models/`.
 - **Controller** - reads `req`, calls the model, sends `res`.
 - **Routes** - just a list of URLs pointing to controller functions.
 - **Middleware** - runs before the controller, can block the request.
