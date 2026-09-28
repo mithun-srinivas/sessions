@@ -1,23 +1,32 @@
-/**
- * server.js
- * ---------------------------------------------------------------------------
- * Entry point. Its only job is to take the configured app and listen on a port.
- *
- *   npm start     -> node server.js
- *   npm run dev   -> node --watch server.js  (restarts on save)
- */
+// Main file - creates the app, connects the routes, starts the server
 
-const app = require('./src/app');
+const express = require('express');
+const userRoutes = require('./routes/userRoutes');
+const secureRoutes = require('./routes/secureRoutes');
+const { login, logout, getStatus } = require('./middlewares/auth');
 
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-app.listen(PORT, () => {
-  console.log('');
-  console.log('  User Management API (Express + MVC)');
-  console.log(`  Listening on http://localhost:${PORT}`);
-  console.log('');
-  console.log('  Open routes      : /api/users');
-  console.log('  Protected routes : /api/secure/users   (401 until you log in)');
-  console.log('  Login            : POST /api/auth/login');
-  console.log('');
+// lets us read req.body as JSON
+app.use(express.json());
+
+// open routes  -> /users
+app.use('/users', userRoutes);
+
+// protected routes -> /secure/users
+app.use('/secure/users', secureRoutes);
+
+// login / logout so we can test the middleware
+app.post('/login', (req, res) => {
+  login();
+  res.json({ message: 'Logged in', isLoggedIn: getStatus() });
+});
+
+app.post('/logout', (req, res) => {
+  logout();
+  res.json({ message: 'Logged out', isLoggedIn: getStatus() });
+});
+
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
 });

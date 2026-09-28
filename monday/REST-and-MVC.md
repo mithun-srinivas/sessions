@@ -59,12 +59,12 @@ operations depending on the verb.
 
 | Verb | Meaning | Our route | Typical success status |
 | --- | --- | --- | --- |
-| `GET` | Read. Never changes data. | `GET /api/users` | `200 OK` |
-| `GET` | Read one. | `GET /api/users/:id` | `200 OK` |
-| `POST` | Create a new resource. | `POST /api/users` | `201 Created` |
-| `PUT` | Replace a resource entirely. | `PUT /api/users/:id` | `200 OK` |
-| `PATCH` | Update *part* of a resource. | `PATCH /api/users/:id` | `200 OK` |
-| `DELETE` | Remove a resource. | `DELETE /api/users/:id` | `200 OK` / `204 No Content` |
+| `GET` | Read. Never changes data. | `GET /users` | `200 OK` |
+| `GET` | Read one. | `GET /users/:id` | `200 OK` |
+| `POST` | Create a new resource. | `POST /users` | `201 Created` |
+| `PUT` | Replace a resource entirely. | `PUT /users/:id` | `200 OK` |
+| `PATCH` | Update *part* of a resource. | `PATCH /users/:id` | `200 OK` |
+| `DELETE` | Remove a resource. | `DELETE /users/:id` | `200 OK` / `204 No Content` |
 
 ### Safe vs idempotent — a question that shows up in interviews
 
@@ -73,8 +73,8 @@ operations depending on the verb.
   state. `GET`, `PUT`, `DELETE` are idempotent. **`POST` is not** — call it ten
   times and you create ten users.
 
-Demo for the class: hit `POST /api/users` three times with the same body, then
-show `user.json` now has three records. Then hit `DELETE /api/users/1` three
+Demo for the class: hit `POST /users` three times with the same body, then
+show `user.json` now has three records. Then hit `DELETE /users/1` three
 times — the first deletes, the next two return `404`, but the *server state* is
 identical after each. That is idempotency.
 
@@ -117,7 +117,7 @@ Walk through these quickly — one sentence each, with our app as the example.
 ## 1.6 Anatomy of a request and a response
 
 ```http
-POST /api/users HTTP/1.1
+POST /users HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
 
@@ -189,7 +189,7 @@ Every answer hurts. That pain is why MVC exists.
 
 | Layer | Responsibility | It is allowed to... | It must NEVER... |
 | --- | --- | --- | --- |
-| **Model** | Owns the data and how it is stored | Read/write `user.json`, find by id, validate shape | Touch `req` or `res` |
+| **Model** | Owns the data and how it is stored | Read and write `user.json` | Touch `req` or `res` |
 | **View** | Presents the result to the user | Render HTML / format JSON | Contain business rules |
 | **Controller** | The traffic cop between them | Read `req`, call the model, send `res` | Read files or write SQL directly |
 
@@ -201,14 +201,11 @@ This is the question a sharp student always asks. The honest answer:
 > In a **JSON API the View is the JSON response itself** — the *representation*
 > of the resource. That is literally the "Representational" in REST.
 
-In our app the "view layer" is the small response helper in
-`src/utils/response.js` that guarantees every response has the same shape:
+In our app the "view layer" is simply the `res.json(user)` call at the end of
+each controller function — the JSON we hand back is the representation.
 
-```json
-{ "success": true, "message": "...", "data": {...} }
-```
-
-Consistency is a feature. The front-end team will thank you.
+Ask the class: if we later wanted to return HTML instead, which files would
+change? (Only the controllers. The model would not notice.)
 
 ## 2.4 The golden rules (put these on a slide)
 
@@ -226,18 +223,20 @@ the routes and controllers?"* If yes, your layering is correct.
 
 ## 2.5 Request lifecycle — trace it out loud
 
-For `PUT /api/secure/users/2`:
+For `PUT /secure/users/2`:
 
 ```
 1. Browser/Postman sends PUT with a JSON body
-2. server.js            → express.json() parses the body into req.body
-3. src/routes/…         → matches /api/secure/users/:id, req.params.id = "2"
-4. src/middlewares/…    → checkLoggedIn: is isLoggedIn true?
-                          NO  → 401, chain stops here. Controller never runs.
-                          YES → next()
-5. src/controllers/…    → validates body, calls userModel.updateUser(2, data)
-6. src/models/…         → reads user.json, finds id 2, merges, writes file
-7. src/controllers/…    → sends 200 with the updated user
+2. server.js                  → express.json() parses the body into req.body
+3. routes/secureRoutes.js     → matches /secure/users/:id, req.params.id = "2"
+4. middlewares/auth.js        → checkLoggedIn: is isLoggedIn true?
+                                NO  → 401, chain stops. Controller never runs.
+                                YES → next()
+5. controllers/userController → updateUser: reads req.body
+6. models/userModel.js        → readUsers() from user.json
+5. controllers/userController → finds id 2, changes the fields
+6. models/userModel.js        → saveUsers() back to user.json
+7. controllers/userController → res.json(user), status 200
 ```
 
 Have a student narrate this while you step through the files. It is the single
@@ -252,27 +251,18 @@ most valuable five minutes of the session.
 ```
 user-management-app/
 ├── package.json
-├── server.js                      # entry point: start the HTTP server
-└── src/
-    ├── app.js                     # build the Express app (middleware + routes)
-    ├── config/…                   # (env, db config — not needed today)
-    ├── data/
-    │   └── user.json              # our "database": starts as []
-    ├── models/
-    │   └── user.model.js          # ALL file reads/writes live here
-    ├── controllers/
-    │   └── user.controller.js     # request → model → response
-    ├── middlewares/
-    │   ├── auth.middleware.js     # the isLoggedIn check
-    │   ├── validate.middleware.js # body validation
-    │   └── error.middleware.js    # 404 + central error handler
-    ├── routes/
-    │   ├── index.js               # mounts the route groups
-    │   ├── user.routes.js         # OPEN routes  (no middleware)
-    │   ├── secure.routes.js       # PROTECTED routes (with middleware)
-    │   └── auth.routes.js         # login / logout / status
-    └── utils/
-        └── response.js            # the "view" — consistent JSON shape
+├── server.js                       # starts the app and connects the routes
+├── data/
+│   └── user.json                   # our "database": starts as []
+├── models/
+│   └── userModel.js                # M — the only file that touches the file
+├── controllers/
+│   └── userController.js           # C — the five CRUD functions
+├── routes/
+│   ├── userRoutes.js               # OPEN routes (no middleware)
+│   └── secureRoutes.js             # PROTECTED routes (with middleware)
+└── middlewares/
+    └── auth.js                     # the isLoggedIn check
 ```
 
 Emphasise: **you can guess what any file does from its name.** That is the
@@ -284,29 +274,28 @@ payoff of a convention.
 
 | Method | Endpoint | Does |
 | --- | --- | --- |
-| `POST` | `/api/users` | Create a user |
-| `GET` | `/api/users` | List all users |
-| `GET` | `/api/users/:id` | Read one user |
-| `PUT` | `/api/users/:id` | Update a user |
-| `DELETE` | `/api/users/:id` | Delete a user |
+| `POST` | `/users` | Create a user |
+| `GET` | `/users` | List all users |
+| `GET` | `/users/:id` | Read one user |
+| `PUT` | `/users/:id` | Update a user |
+| `DELETE` | `/users/:id` | Delete a user |
 
 **Protected routes — the SAME controllers, guarded by middleware:**
 
 | Method | Endpoint | Does |
 | --- | --- | --- |
-| `POST` | `/api/secure/users` | Create — 401 if logged out |
-| `GET` | `/api/secure/users` | List — 401 if logged out |
-| `GET` | `/api/secure/users/:id` | Read one — 401 if logged out |
-| `PUT` | `/api/secure/users/:id` | Update — 401 if logged out |
-| `DELETE` | `/api/secure/users/:id` | Delete — 401 if logged out |
+| `POST` | `/secure/users` | Create — 401 if logged out |
+| `GET` | `/secure/users` | List — 401 if logged out |
+| `GET` | `/secure/users/:id` | Read one — 401 if logged out |
+| `PUT` | `/secure/users/:id` | Update — 401 if logged out |
+| `DELETE` | `/secure/users/:id` | Delete — 401 if logged out |
 
 **Auth helpers (to flip the switch in class):**
 
 | Method | Endpoint | Does |
 | --- | --- | --- |
-| `POST` | `/api/auth/login` | Sets `isLoggedIn = true` |
-| `POST` | `/api/auth/logout` | Sets `isLoggedIn = false` |
-| `GET` | `/api/auth/status` | Shows the current value |
+| `POST` | `/login` | Sets `isLoggedIn = true` |
+| `POST` | `/logout` | Sets `isLoggedIn = false` |
 
 The teaching moment here is big: **the two route groups share the exact same
 controller functions.** Nothing in the controller knows or cares about auth.
@@ -347,15 +336,12 @@ it times out, with no error message. Show them this deliberately once.
 ## 4.3 Our auth middleware
 
 ```js
-// src/middlewares/auth.middleware.js
+// middlewares/auth.js
 let isLoggedIn = false;          // module-level state = our fake session
 
 function checkLoggedIn(req, res, next) {
   if (!isLoggedIn) {
-    return res.status(401).json({
-      success: false,
-      message: 'Unauthorized. You must be logged in to access this resource.'
-    });
+    return res.status(401).json({ message: 'Please login first' });
   }
   next();
 }
@@ -421,15 +407,15 @@ click.
 
 ## 6.1 In-class exercises
 
-1. **Easy** — Add `GET /api/users/count` returning `{ count: n }`. Which layer
+1. **Easy** — Add `GET /users/count` returning `{ count: n }`. Which layer
    does the counting logic belong in?
 2. **Easy** — Make `email` unique. Return `409 Conflict` on a duplicate. Where
    does that check live — model or controller?
-3. **Medium** — Add `PATCH /api/users/:id` that updates only the supplied
+3. **Medium** — Add `PATCH /users/:id` that updates only the supplied
    fields. How does it differ from `PUT`?
 4. **Medium** — Add a `logger` middleware that prints
-   `[2026-09-28T10:00:00Z] GET /api/users → 200`. Apply it at app level.
-5. **Medium** — Add `GET /api/users?search=asha` filtering by name.
+   `[2026-09-28T10:00:00Z] GET /users → 200`. Apply it at app level.
+5. **Medium** — Add `GET /users?search=asha` filtering by name.
 6. **Hard** — Add a `role` field and an `isAdmin` middleware that returns `403`
    for non-admins. Chain it *after* `checkLoggedIn`. Why does order matter?
 7. **Hard** — Replace the JSON file with an in-memory array. You should only
@@ -438,7 +424,7 @@ click.
 ## 6.2 Quick quiz (answers below)
 
 1. Why is `POST` not idempotent but `PUT` is?
-2. A client sends `PUT /api/users/999` for a user that doesn't exist. Status?
+2. A client sends `PUT /users/999` for a user that doesn't exist. Status?
 3. What is the difference between `401` and `403`?
 4. Name the three things a middleware function can do.
 5. In a JSON API, what plays the role of the "View"?
