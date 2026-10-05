@@ -16,8 +16,8 @@ app.use(express.json());
 // our replies. credentials: true is what lets the login cookie through.
 // ================================================================
 
-const cors = require('cors');
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+// const cors = require('cors');
+// app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 
 // Our answers depend on who is logged in, so the browser must never
 // reuse an old one. (Without this it can serve a cached /auth/me and the
