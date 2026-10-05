@@ -9,14 +9,18 @@ export default function Home({ user, onLoggedOut }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api
-      .get('/')
-      .then((res) => setMessage(res.data.message))
-      .catch((err) => {
+    async function loadMessage() {
+      try {
+        const res = await api.get('/');
+        setMessage(res.data.message);
+      } catch (err) {
         // 401 = the session expired. Clearing the user brings Login back.
         if (err.response && err.response.status === 401) onLoggedOut();
         else setError(errorText(err));
-      });
+      }
+    }
+
+    loadMessage();
   }, []);
 
   async function handleLogout() {

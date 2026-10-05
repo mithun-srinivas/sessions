@@ -14,12 +14,23 @@ export default function App() {
 
   // On load, ask who we are. The cookie knows; React state does not
   // survive a refresh.
+  //
+  // useEffect cannot be async itself - React expects it to return either
+  // nothing or a cleanup function - so we declare an async function
+  // inside it and call it.
   useEffect(() => {
-    api
-      .get('/auth/me')
-      .then((res) => setUser(res.data.user))
-      .catch((err) => setError(errorText(err)))
-      .finally(() => setLoading(false));
+    async function loadUser() {
+      try {
+        const res = await api.get('/auth/me');
+        setUser(res.data.user);
+      } catch (err) {
+        setError(errorText(err));
+      } finally {
+        setLoading(false); // runs whether it worked or not
+      }
+    }
+
+    loadUser();
   }, []);
 
   function handleLoggedOut() {

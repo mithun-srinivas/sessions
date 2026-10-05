@@ -764,11 +764,23 @@ const [page, setPage] = useState('login');  // 'login' or 'signup'
 
 // on load: am I logged in? The cookie knows - React state does not
 // survive a refresh, so we have to ask the server every time.
+//
+// useEffect cannot be async itself - React expects it to return either
+// nothing or a cleanup function - so we declare an async function
+// inside it and call it.
 useEffect(() => {
-  api.get('/auth/me')
-    .then((res) => setUser(res.data.user))
-    .catch((err) => setError(errorText(err)))
-    .finally(() => setLoading(false));
+  async function loadUser() {
+    try {
+      const res = await api.get('/auth/me');
+      setUser(res.data.user);
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadUser();
 }, []);
 
 if (loading) return <p>Loading…</p>;
@@ -798,12 +810,17 @@ up to `App` is what swaps the form for `Home`.
 
 ```jsx
 useEffect(() => {
-  api.get('/')
-    .then((res) => setMessage(res.data.message))
-    .catch((err) => {
+  async function loadMessage() {
+    try {
+      const res = await api.get('/');
+      setMessage(res.data.message);
+    } catch (err) {
       if (err.response && err.response.status === 401) onLoggedOut();  // ← the redirect
       else setError(errorText(err));
-    });
+    }
+  }
+
+  loadMessage();
 }, []);
 ```
 
