@@ -6,9 +6,9 @@
 > Passport middleware in front of a route so that only logged-in users get
 > through.
 
-**Prerequisites:** [REST & MVC](../monday/REST-and-MVC.md) and
-[Pug with Express](../tuesday/PUG-with-Express.md). Today we go back to JSON —
-but this time the page asking for the JSON is a React app on a different port.
+**Prerequisites:** the earlier sessions on REST & MVC and on Pug with Express.
+Today we go back to JSON — but this time the page asking for the JSON is a
+React app on a different port.
 
 ---
 
